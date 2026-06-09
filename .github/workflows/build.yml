@@ -18,13 +18,14 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Robust Prepare Project
+    - name: Flatten and Prepare Project
       run: |
-        # استخراج فایل زیپ در یک پوشه موقت
-        unzip -o NetChecker-CleanArchitecture-Android.zip -d temp_folder
-        # انتقال تمام محتویات به ریشه پروژه، صرف‌نظر از اینکه کجاست
-        find temp_folder -name "gradlew" -exec dirname {} \; | xargs -I {} cp -r {}/* .
-        # اطمینان از دسترسی اجرای فایل gradlew
+        # استخراج در یک پوشه موقت
+        unzip -o NetChecker-CleanArchitecture-Android.zip -d temp_extract
+        # پیدا کردن هر جایی که gradlew هست و انتقالِ محتویاتِ همون پوشه به ریشه
+        # این دستور باعث میشه لایه‌های تودرتو حذف بشن و بیایم سرِ اصلِ مطلب
+        find temp_extract -name "gradlew" -exec dirname {} \; | xargs -I {} cp -r {}/* .
+        # حالا gradlew حتماً توی ریشه است
         chmod +x gradlew
 
     - name: Run Build
@@ -34,4 +35,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: NetChecker-Release-APK
-        path: "**/app/build/outputs/apk/release/*.apk"
+        path: "app/build/outputs/apk/release/*.apk"
