@@ -18,18 +18,17 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Prepare Project
+    - name: Robust Prepare Project
       run: |
-        unzip -o NetChecker-CleanArchitecture-Android.zip -d project_dir
-        # پیدا کردن مسیری که فایل gradlew در آن قرار دارد
-        PROJECT_ROOT=$(find project_dir -name "gradlew" | head -n 1 | xargs dirname)
-        echo "PROJECT_ROOT=$PROJECT_ROOT" >> $GITHUB_ENV
-        chmod +x $PROJECT_ROOT/gradlew
+        # استخراج فایل زیپ در یک پوشه موقت
+        unzip -o NetChecker-CleanArchitecture-Android.zip -d temp_folder
+        # انتقال تمام محتویات به ریشه پروژه، صرف‌نظر از اینکه کجاست
+        find temp_folder -name "gradlew" -exec dirname {} \; | xargs -I {} cp -r {}/* .
+        # اطمینان از دسترسی اجرای فایل gradlew
+        chmod +x gradlew
 
     - name: Run Build
-      run: |
-        cd ${{ env.PROJECT_ROOT }}
-        ./gradlew assembleRelease
+      run: ./gradlew assembleRelease
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
