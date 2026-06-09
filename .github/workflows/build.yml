@@ -19,43 +19,32 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Unzip and Smart Arrange Project
+    - name: Unzip and Arrange
       run: |
-        if [ -f NetChecker-CleanArchitecture-Android.zip ]; then
-          echo "Unzipping project..."
-          unzip -o NetChecker-CleanArchitecture-Android.zip -d extracted_project
-          rm NetChecker-CleanArchitecture-Android.zip
-          
-          # یافتن ریشه پروژه و انتقال فایل‌ها به دایرکتوری اصلی
-          GRADLE_ROOT=$(find extracted_project -name "settings.gradle.kts" -exec dirname {} \; | head -n 1)
-          if [ ! -z "$GRADLE_ROOT" ]; then
-            echo "Found project root at $GRADLE_ROOT, moving files to workspace root..."
-            cp -r $GRADLE_ROOT/* .
-            rm -rf extracted_project
-          else
-            echo "Error: settings.gradle.kts not found in zip!"
-            exit 1
-          fi
+        unzip -o NetChecker-CleanArchitecture-Android.zip -d project_temp
+        # پیدا کردن پوشه‌ای که gradlew در آن است
+        GRADLE_DIR=$(find project_temp -name "gradlew" -exec dirname {} \; | head -n 1)
+        if [ -z "$GRADLE_DIR" ]; then
+          echo "Error: gradlew not found!"
+          exit 1
+        fi
+        mv $GRADLE_DIR/* .
+        rm -rf project_temp
+
+    - name: Grant Execute Permission
+      run: |
+        if [ -f gradlew ]; then
+          chmod +x gradlew
         else
-          echo "Zip file not found!"
+          echo "gradlew still not found!"
           exit 1
         fi
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-      with:
-        gradle-version: 8.5
-
-    - name: Grant Execute Permission
-      run: chmod +x gradlew
-
     - name: Run Build
-      # تغییر از bundleRelease به assembleRelease برای تولید APK
       run: ./gradlew assembleRelease
 
     - name: Upload APK to Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: NetChecker-Release-APK
-        # مسیر صحیح برای پیدا کردن فایل APK تولید شده
         path: app/build/outputs/apk/release/*.apk
