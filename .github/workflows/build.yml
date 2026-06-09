@@ -26,7 +26,7 @@ jobs:
           unzip -o NetChecker-CleanArchitecture-Android.zip -d extracted_project
           rm NetChecker-CleanArchitecture-Android.zip
           
-          # پیدا کردن محل اصلی پروژه و انتقال به ریشه برای بیلد صحیح
+          # یافتن ریشه پروژه و انتقال فایل‌ها به دایرکتوری اصلی
           GRADLE_ROOT=$(find extracted_project -name "settings.gradle.kts" -exec dirname {} \; | head -n 1)
           if [ ! -z "$GRADLE_ROOT" ]; then
             echo "Found project root at $GRADLE_ROOT, moving files to workspace root..."
@@ -37,7 +37,7 @@ jobs:
             exit 1
           fi
         else
-          echo "Zip file not found! Ensure it is in the root directory."
+          echo "Zip file not found!"
           exit 1
         fi
 
@@ -50,12 +50,12 @@ jobs:
       run: chmod +x gradlew
 
     - name: Run Build
-      # دستور assembleRelease خروجی APK می‌دهد
+      # تغییر از bundleRelease به assembleRelease برای تولید APK
       run: ./gradlew assembleRelease
 
     - name: Upload APK to Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: NetChecker-Release-APK
-        # مسیر خروجی فایل‌های APK در اندروید
+        # مسیر صحیح برای پیدا کردن فایل APK تولید شده
         path: app/build/outputs/apk/release/*.apk
