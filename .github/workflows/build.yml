@@ -26,31 +26,36 @@ jobs:
           unzip -o NetChecker-CleanArchitecture-Android.zip -d extracted_project
           rm NetChecker-CleanArchitecture-Android.zip
           
+          # پیدا کردن محل اصلی پروژه و انتقال به ریشه برای بیلد صحیح
           GRADLE_ROOT=$(find extracted_project -name "settings.gradle.kts" -exec dirname {} \; | head -n 1)
           if [ ! -z "$GRADLE_ROOT" ]; then
             echo "Found project root at $GRADLE_ROOT, moving files to workspace root..."
             cp -r $GRADLE_ROOT/* .
+            rm -rf extracted_project
           else
             echo "Error: settings.gradle.kts not found in zip!"
             exit 1
           fi
-          rm -rf extracted_project
         else
-          echo "Zip file not found!"
+          echo "Zip file not found! Ensure it is in the root directory."
           exit 1
         fi
 
-    - name: Setup and Run Build via Gradle Action
+    - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: 8.5
 
-    - name: Run Direct Build
-      run: gradle bundleRelease
+    - name: Grant Execute Permission
+      run: chmod +x gradlew
 
-    - name: Upload Unsigned Bundle to User
+    - name: Run Build
+      # دستور assembleRelease خروجی APK می‌دهد
+      run: ./gradlew assembleRelease
+
+    - name: Upload APK to Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: NetChecker-Unsigned-Bundle
-        path: app/build/outputs/bundle/release/*.aab
-
+        name: NetChecker-Release-APK
+        # مسیر خروجی فایل‌های APK در اندروید
+        path: app/build/outputs/apk/release/*.apk
